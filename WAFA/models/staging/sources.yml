@@ -1,0 +1,167 @@
+version: 2
+
+sources:
+  - name: raw_wafa
+    database: WAFA
+    schema: RAW_WAFA
+
+    config:
+      freshness:
+        warn_after:
+          count: 12
+          period: hour
+
+        error_after:
+          count: 24
+          period: hour
+
+      loaded_at_field: _ETL_LOADED_AT
+
+    tables:
+      - name: clients
+        description: "Clients de la compagnie d'assurance"
+
+        columns:
+          - name: CLIENT_ID
+            description: "Identifiant unique du client"
+            data_tests:
+              - unique
+              - not_null
+
+          - name: FIRST_NAME
+            data_tests:
+              - not_null
+
+          - name: LAST_NAME
+            data_tests:
+              - not_null
+
+          - name: CUSTOMER_SINCE
+            data_tests:
+              - not_null
+
+      - name: products
+        description: "Catalogue des produits d'assurance"
+
+        columns:
+          - name: PRODUCT_ID
+            description: "Identifiant unique du produit"
+            data_tests:
+              - unique
+              - not_null
+
+          - name: PRODUCT_NAME
+            data_tests:
+              - not_null
+
+          - name: PRODUCT_CATEGORY
+            data_tests:
+              - not_null
+
+      - name: agents
+        description: "Agents du réseau commercial"
+
+        columns:
+          - name: AGENT_ID
+            description: "Identifiant unique de l'agent"
+            data_tests:
+              - unique
+              - not_null
+
+          - name: AGENT_NAME
+            data_tests:
+              - not_null
+
+      - name: contracts
+        description: "Contrats d'assurance souscrits"
+
+        columns:
+          - name: CONTRACT_ID
+            description: "Identifiant unique du contrat"
+            data_tests:
+              - unique
+              - not_null
+
+          - name: CLIENT_ID
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('raw_wafa', 'clients')
+                    field: CLIENT_ID
+
+          - name: PRODUCT_ID
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('raw_wafa', 'products')
+                    field: PRODUCT_ID
+
+          - name: AGENT_ID
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('raw_wafa', 'agents')
+                    field: AGENT_ID
+
+          - name: START_DATE
+            data_tests:
+              - not_null
+
+          - name: ANNUAL_PREMIUM
+            data_tests:
+              - not_null
+
+      - name: claims
+        description: "Sinistres déclarés par les assurés"
+
+        columns:
+          - name: CLAIM_ID
+            description: "Identifiant unique du sinistre"
+            data_tests:
+              - unique
+              - not_null
+
+          - name: CONTRACT_ID
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('raw_wafa', 'contracts')
+                    field: CONTRACT_ID
+
+          - name: CLAIM_DATE
+            data_tests:
+              - not_null
+
+          - name: DECLARED_AMOUNT
+            data_tests:
+              - not_null
+
+      - name: payments
+        description: "Paiements liés aux contrats d'assurance"
+
+        columns:
+          - name: PAYMENT_ID
+            description: "Identifiant unique du paiement"
+            data_tests:
+              - unique
+              - not_null
+
+          - name: CONTRACT_ID
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('raw_wafa', 'contracts')
+                    field: CONTRACT_ID
+
+          - name: PAYMENT_DATE
+            data_tests:
+              - not_null
+
+          - name: AMOUNT
+            data_tests:
+              - not_null
